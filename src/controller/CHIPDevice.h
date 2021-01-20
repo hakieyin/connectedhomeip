@@ -30,6 +30,7 @@
 #include <app/InteractionModelEngine.h>
 #include <app/util/CHIPDeviceCallbacksMgr.h>
 #include <app/util/basic-types.h>
+#include <ble/BleLayer.h>
 #include <core/CHIPCallback.h>
 #include <core/CHIPCore.h>
 #include <setup_payload/SetupPayload.h>
@@ -38,6 +39,7 @@
 #include <transport/PASESession.h>
 #include <transport/SecureSessionMgr.h>
 #include <transport/TransportMgr.h>
+#include <transport/raw/BLE.h>
 #include <transport/raw/MessageHeader.h>
 #include <transport/raw/UDP.h>
 
@@ -52,6 +54,10 @@ using DeviceTransportMgr = TransportMgr<Transport::UDP /* IPv6 */
 #if INET_CONFIG_ENABLE_IPV4
                                         ,
                                         Transport::UDP /* IPv4 */
+#endif
+#if CONFIG_NETWORK_LAYER_BLE
+                                        ,
+                                        Transport::BLE<4> /* BLE */
 #endif
                                         >;
 
@@ -143,17 +149,24 @@ public:
      * @param[in] transportMgr Transport manager object pointer
      * @param[in] sessionMgr   Secure session manager object pointer
      * @param[in] inetLayer    InetLayer object pointer
+     * @param[in] bleLayer     BleLayer object pointer
      * @param[in] listenPort   Port on which controller is listening (typically CHIP_PORT)
      * @param[in] admin        Local administrator that's initializing this device object
      */
-    void Init(DeviceTransportMgr * transportMgr, SecureSessionMgr * sessionMgr, Inet::InetLayer * inetLayer, uint16_t listenPort,
-              Transport::AdminId admin)
+    void Init(DeviceTransportMgr * transportMgr, SecureSessionMgr * sessionMgr, Inet::InetLayer * inetLayer
+#if CONFIG_NETWORK_LAYER_BLE
+              ,
+              Ble::BleLayer * bleLayer
+#endif
+              ,
+              uint16_t listenPort, Transport::AdminId admin)
     {
         mTransportMgr   = transportMgr;
         mSessionManager = sessionMgr;
         mInetLayer      = inetLayer;
         mListenPort     = listenPort;
         mAdminId        = admin;
+        mBleLayer       = bleLayer;
     }
 
     /**
@@ -170,15 +183,27 @@ public:
      * @param[in] transportMgr Transport manager object pointer
      * @param[in] sessionMgr   Secure session manager object pointer
      * @param[in] inetLayer    InetLayer object pointer
+     * @param[in] bleLayer     BleLayer object pointer
      * @param[in] listenPort   Port on which controller is listening (typically CHIP_PORT)
      * @param[in] deviceId     Node ID of the device
      * @param[in] peerAddress  The location of the peer. MUST be of type Transport::Type::kUdp
      * @param[in] admin        Local administrator that's initializing this device object
      */
-    void Init(DeviceTransportMgr * transportMgr, SecureSessionMgr * sessionMgr, Inet::InetLayer * inetLayer, uint16_t listenPort,
-              NodeId deviceId, const Transport::PeerAddress & peerAddress, Transport::AdminId admin)
+    void Init(DeviceTransportMgr * transportMgr, SecureSessionMgr * sessionMgr, Inet::InetLayer * inetLayer
+#if CONFIG_NETWORK_LAYER_BLE
+              ,
+              Ble::BleLayer * bleLayer
+#endif
+              ,
+              uint16_t listenPort, NodeId deviceId, const Transport::PeerAddress & peerAddress, Transport::AdminId admin)
     {
-        Init(transportMgr, sessionMgr, inetLayer, mListenPort, admin);
+        Init(transportMgr, sessionMgr, inetLayer
+#if CONFIG_NETWORK_LAYER_BLE
+             ,
+             bleLayer
+#endif
+             ,
+             mListenPort, admin);
         mDeviceId = deviceId;
         mState    = ConnectionState::Connecting;
 
@@ -292,6 +317,7 @@ public:
         mSessionManager = nullptr;
         mStatusDelegate = nullptr;
         mInetLayer      = nullptr;
+        mBleLayer       = nullptr;
     }
 
     NodeId GetDeviceId() const { return mDeviceId; }
@@ -331,6 +357,10 @@ private:
 
     bool mActive           = false;
     ConnectionState mState = ConnectionState::NotConnected;
+
+#if CONFIG_NETWORK_LAYER_BLE
+    Ble::BleLayer * mBleLayer;
+#endif
 
     PASESessionSerializable mPairing;
 

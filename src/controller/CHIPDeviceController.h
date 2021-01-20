@@ -42,6 +42,10 @@
 #include <transport/TransportMgr.h>
 #include <transport/raw/UDP.h>
 
+#if CONFIG_NETWORK_LAYER_BLE
+#include <ble/BleLayer.h>
+#endif
+
 namespace chip {
 
 namespace Controller {
@@ -117,7 +121,7 @@ public:
      * System::Layer and InetLayer.
      */
     CHIP_ERROR Init(NodeId localDeviceId, PersistentStorageDelegate * storageDelegate = nullptr,
-                    System::Layer * systemLayer = nullptr, Inet::InetLayer * inetLayer = nullptr);
+                    System::Layer * systemLayer = nullptr, Inet::InetLayer * inetLayer = nullptr, Ble::BleLayer * bleLayer = nullptr);
 
     virtual CHIP_ERROR Shutdown();
 
@@ -192,6 +196,7 @@ protected:
     Messaging::ExchangeManager * mExchangeManager;
     PersistentStorageDelegate * mStorageDelegate;
     Inet::InetLayer * mInetLayer;
+    Ble::BleLayer * mBleLayer;
 
     uint16_t mListenPort;
     uint16_t GetInactiveDeviceIndex();
@@ -260,7 +265,7 @@ public:
      */
     CHIP_ERROR Init(NodeId localDeviceId, PersistentStorageDelegate * storageDelegate = nullptr,
                     DevicePairingDelegate * pairingDelegate = nullptr, System::Layer * systemLayer = nullptr,
-                    Inet::InetLayer * inetLayer = nullptr);
+                    Inet::InetLayer * inetLayer = nullptr, Ble::BleLayer * bleLayer = nullptr);
 
     void SetDevicePairingDelegate(DevicePairingDelegate * pairingDelegate) { mPairingDelegate = pairingDelegate; }
 
