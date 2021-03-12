@@ -121,7 +121,8 @@ public:
      * System::Layer and InetLayer.
      */
     CHIP_ERROR Init(NodeId localDeviceId, PersistentStorageDelegate * storageDelegate = nullptr,
-                    System::Layer * systemLayer = nullptr, Inet::InetLayer * inetLayer = nullptr, Ble::BleLayer * bleLayer = nullptr);
+                    System::Layer * systemLayer = nullptr, Inet::InetLayer * inetLayer = nullptr,
+                    Ble::BleLayer * bleLayer = nullptr);
 
     virtual CHIP_ERROR Shutdown();
 
