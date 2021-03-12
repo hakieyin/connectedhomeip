@@ -83,14 +83,6 @@ void DeviceCallbacks::PostAttributeChangeCallback(EndpointId endpointId, Cluster
 
     switch (clusterId)
     {
-    case ZCL_ON_OFF_CLUSTER_ID:
-        OnOnOffPostAttributeChangeCallback(endpointId, attributeId, value);
-        break;
-
-    case ZCL_IDENTIFY_CLUSTER_ID:
-        OnIdentifyPostAttributeChangeCallback(endpointId, attributeId, value);
-        break;
-
     default:
         ESP_LOGI(TAG, "Unhandled cluster ID: %d", clusterId);
         break;
@@ -129,18 +121,6 @@ void DeviceCallbacks::OnSessionEstablished(const ChipDeviceEvent * event)
     {
         ESP_LOGI(TAG, "Commissioner detected!");
     }
-}
-
-void DeviceCallbacks::OnOnOffPostAttributeChangeCallback(EndpointId endpointId, AttributeId attributeId, uint8_t * value)
-{
-    VerifyOrExit(attributeId == ZCL_ON_OFF_ATTRIBUTE_ID, ESP_LOGI(TAG, "Unhandled Attribute ID: '0x%04x", attributeId));
-    VerifyOrExit(endpointId == 1 || endpointId == 2, ESP_LOGE(TAG, "Unexpected EndPoint ID: `0x%02x'", endpointId));
-
-    // At this point we can assume that value points to a bool value.
-    endpointId == 1 ? statusLED1.Set(*value) : statusLED2.Set(*value);
-
-exit:
-    return;
 }
 
 void IdentifyTimerHandler(Layer * systemLayer, void * appState, Error error)
