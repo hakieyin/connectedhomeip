@@ -131,6 +131,69 @@ namespace {
 // Singleton instance of the callbacks manager
 app::CHIPDeviceCallbacksMgr & gCallbacks = app::CHIPDeviceCallbacksMgr::GetInstance();
 
+void BindingClusterAttributeListListAttributeFilter(TLV::TLVReader * tlvData, Callback::Cancelable * onSuccessCallback,
+                                                    Callback::Cancelable * onFailureCallback)
+{
+    chip::app::DataModel::DecodableList<chip::AttributeId> list;
+    CHIP_ERROR err = Decode(*tlvData, list);
+    if (err != CHIP_NO_ERROR)
+    {
+        if (onFailureCallback != nullptr)
+        {
+            Callback::Callback<DefaultFailureCallback> * cb =
+                Callback::Callback<DefaultFailureCallback>::FromCancelable(onFailureCallback);
+            cb->mCall(cb->mContext, EMBER_ZCL_STATUS_INVALID_VALUE);
+        }
+        return;
+    }
+
+    Callback::Callback<BindingAttributeListListAttributeCallback> * cb =
+        Callback::Callback<BindingAttributeListListAttributeCallback>::FromCancelable(onSuccessCallback);
+    cb->mCall(cb->mContext, list);
+}
+
+void GroupsClusterAttributeListListAttributeFilter(TLV::TLVReader * tlvData, Callback::Cancelable * onSuccessCallback,
+                                                   Callback::Cancelable * onFailureCallback)
+{
+    chip::app::DataModel::DecodableList<chip::AttributeId> list;
+    CHIP_ERROR err = Decode(*tlvData, list);
+    if (err != CHIP_NO_ERROR)
+    {
+        if (onFailureCallback != nullptr)
+        {
+            Callback::Callback<DefaultFailureCallback> * cb =
+                Callback::Callback<DefaultFailureCallback>::FromCancelable(onFailureCallback);
+            cb->mCall(cb->mContext, EMBER_ZCL_STATUS_INVALID_VALUE);
+        }
+        return;
+    }
+
+    Callback::Callback<GroupsAttributeListListAttributeCallback> * cb =
+        Callback::Callback<GroupsAttributeListListAttributeCallback>::FromCancelable(onSuccessCallback);
+    cb->mCall(cb->mContext, list);
+}
+
+void ScenesClusterAttributeListListAttributeFilter(TLV::TLVReader * tlvData, Callback::Cancelable * onSuccessCallback,
+                                                   Callback::Cancelable * onFailureCallback)
+{
+    chip::app::DataModel::DecodableList<chip::AttributeId> list;
+    CHIP_ERROR err = Decode(*tlvData, list);
+    if (err != CHIP_NO_ERROR)
+    {
+        if (onFailureCallback != nullptr)
+        {
+            Callback::Callback<DefaultFailureCallback> * cb =
+                Callback::Callback<DefaultFailureCallback>::FromCancelable(onFailureCallback);
+            cb->mCall(cb->mContext, EMBER_ZCL_STATUS_INVALID_VALUE);
+        }
+        return;
+    }
+
+    Callback::Callback<ScenesAttributeListListAttributeCallback> * cb =
+        Callback::Callback<ScenesAttributeListListAttributeCallback>::FromCancelable(onSuccessCallback);
+    cb->mCall(cb->mContext, list);
+}
+
 bool emberAfOtaSoftwareUpdateProviderClusterApplyUpdateResponseCallback(EndpointId endpoint, app::CommandSender * commandObj,
                                                                         uint8_t action, uint32_t delayedActionTime)
 {
@@ -143,5 +206,135 @@ bool emberAfOtaSoftwareUpdateProviderClusterApplyUpdateResponseCallback(Endpoint
     Callback::Callback<OtaSoftwareUpdateProviderClusterApplyUpdateResponseCallback> * cb =
         Callback::Callback<OtaSoftwareUpdateProviderClusterApplyUpdateResponseCallback>::FromCancelable(onSuccessCallback);
     cb->mCall(cb->mContext, action, delayedActionTime);
+    return true;
+}
+
+bool emberAfOtaSoftwareUpdateProviderClusterQueryImageResponseCallback(EndpointId endpoint, app::CommandSender * commandObj,
+                                                                       uint8_t status, uint32_t delayedActionTime,
+                                                                       chip::CharSpan imageURI, uint32_t softwareVersion,
+                                                                       chip::CharSpan softwareVersionString,
+                                                                       chip::ByteSpan updateToken, bool userConsentNeeded,
+                                                                       chip::ByteSpan metadataForRequestor)
+{
+    ChipLogProgress(Zcl, "QueryImageResponse:");
+    ChipLogProgress(Zcl, "  status: %" PRIu8 "", status);
+    ChipLogProgress(Zcl, "  delayedActionTime: %" PRIu32 "", delayedActionTime);
+    ChipLogProgress(Zcl, "  imageURI: %.*s", static_cast<int>(imageURI.size()), imageURI.data());
+    ChipLogProgress(Zcl, "  softwareVersion: %" PRIu32 "", softwareVersion);
+    ChipLogProgress(Zcl, "  softwareVersionString: %.*s", static_cast<int>(softwareVersionString.size()),
+                    softwareVersionString.data());
+    ChipLogProgress(Zcl, "  updateToken: %zu", updateToken.size());
+    ChipLogProgress(Zcl, "  userConsentNeeded: %d", userConsentNeeded);
+    ChipLogProgress(Zcl, "  metadataForRequestor: %zu", metadataForRequestor.size());
+
+    GET_CLUSTER_RESPONSE_CALLBACKS("OtaSoftwareUpdateProviderClusterQueryImageResponseCallback");
+
+    Callback::Callback<OtaSoftwareUpdateProviderClusterQueryImageResponseCallback> * cb =
+        Callback::Callback<OtaSoftwareUpdateProviderClusterQueryImageResponseCallback>::FromCancelable(onSuccessCallback);
+    cb->mCall(cb->mContext, status, delayedActionTime, imageURI, softwareVersion, softwareVersionString, updateToken,
+              userConsentNeeded, metadataForRequestor);
+    return true;
+}
+
+bool emberAfScenesClusterAddSceneResponseCallback(EndpointId endpoint, app::CommandSender * commandObj, uint8_t status,
+                                                  uint16_t groupId, uint8_t sceneId)
+{
+    ChipLogProgress(Zcl, "AddSceneResponse:");
+    ChipLogProgress(Zcl, "  status: %" PRIu8 "", status);
+    ChipLogProgress(Zcl, "  groupId: %" PRIu16 "", groupId);
+    ChipLogProgress(Zcl, "  sceneId: %" PRIu8 "", sceneId);
+
+    GET_CLUSTER_RESPONSE_CALLBACKS("ScenesClusterAddSceneResponseCallback");
+
+    Callback::Callback<ScenesClusterAddSceneResponseCallback> * cb =
+        Callback::Callback<ScenesClusterAddSceneResponseCallback>::FromCancelable(onSuccessCallback);
+    cb->mCall(cb->mContext, status, groupId, sceneId);
+    return true;
+}
+
+bool emberAfScenesClusterGetSceneMembershipResponseCallback(EndpointId endpoint, app::CommandSender * commandObj, uint8_t status,
+                                                            uint8_t capacity, uint16_t groupId, uint8_t sceneCount,
+                                                            /* TYPE WARNING: array array defaults to */ uint8_t * sceneList)
+{
+    ChipLogProgress(Zcl, "GetSceneMembershipResponse:");
+    ChipLogProgress(Zcl, "  status: %" PRIu8 "", status);
+    ChipLogProgress(Zcl, "  capacity: %" PRIu8 "", capacity);
+    ChipLogProgress(Zcl, "  groupId: %" PRIu16 "", groupId);
+    ChipLogProgress(Zcl, "  sceneCount: %" PRIu8 "", sceneCount);
+    ChipLogProgress(Zcl, "  sceneList: %p", sceneList);
+
+    GET_CLUSTER_RESPONSE_CALLBACKS("ScenesClusterGetSceneMembershipResponseCallback");
+
+    Callback::Callback<ScenesClusterGetSceneMembershipResponseCallback> * cb =
+        Callback::Callback<ScenesClusterGetSceneMembershipResponseCallback>::FromCancelable(onSuccessCallback);
+    cb->mCall(cb->mContext, status, capacity, groupId, sceneCount, sceneList);
+    return true;
+}
+
+bool emberAfScenesClusterRemoveAllScenesResponseCallback(EndpointId endpoint, app::CommandSender * commandObj, uint8_t status,
+                                                         uint16_t groupId)
+{
+    ChipLogProgress(Zcl, "RemoveAllScenesResponse:");
+    ChipLogProgress(Zcl, "  status: %" PRIu8 "", status);
+    ChipLogProgress(Zcl, "  groupId: %" PRIu16 "", groupId);
+
+    GET_CLUSTER_RESPONSE_CALLBACKS("ScenesClusterRemoveAllScenesResponseCallback");
+
+    Callback::Callback<ScenesClusterRemoveAllScenesResponseCallback> * cb =
+        Callback::Callback<ScenesClusterRemoveAllScenesResponseCallback>::FromCancelable(onSuccessCallback);
+    cb->mCall(cb->mContext, status, groupId);
+    return true;
+}
+
+bool emberAfScenesClusterRemoveSceneResponseCallback(EndpointId endpoint, app::CommandSender * commandObj, uint8_t status,
+                                                     uint16_t groupId, uint8_t sceneId)
+{
+    ChipLogProgress(Zcl, "RemoveSceneResponse:");
+    ChipLogProgress(Zcl, "  status: %" PRIu8 "", status);
+    ChipLogProgress(Zcl, "  groupId: %" PRIu16 "", groupId);
+    ChipLogProgress(Zcl, "  sceneId: %" PRIu8 "", sceneId);
+
+    GET_CLUSTER_RESPONSE_CALLBACKS("ScenesClusterRemoveSceneResponseCallback");
+
+    Callback::Callback<ScenesClusterRemoveSceneResponseCallback> * cb =
+        Callback::Callback<ScenesClusterRemoveSceneResponseCallback>::FromCancelable(onSuccessCallback);
+    cb->mCall(cb->mContext, status, groupId, sceneId);
+    return true;
+}
+
+bool emberAfScenesClusterStoreSceneResponseCallback(EndpointId endpoint, app::CommandSender * commandObj, uint8_t status,
+                                                    uint16_t groupId, uint8_t sceneId)
+{
+    ChipLogProgress(Zcl, "StoreSceneResponse:");
+    ChipLogProgress(Zcl, "  status: %" PRIu8 "", status);
+    ChipLogProgress(Zcl, "  groupId: %" PRIu16 "", groupId);
+    ChipLogProgress(Zcl, "  sceneId: %" PRIu8 "", sceneId);
+
+    GET_CLUSTER_RESPONSE_CALLBACKS("ScenesClusterStoreSceneResponseCallback");
+
+    Callback::Callback<ScenesClusterStoreSceneResponseCallback> * cb =
+        Callback::Callback<ScenesClusterStoreSceneResponseCallback>::FromCancelable(onSuccessCallback);
+    cb->mCall(cb->mContext, status, groupId, sceneId);
+    return true;
+}
+
+bool emberAfScenesClusterViewSceneResponseCallback(EndpointId endpoint, app::CommandSender * commandObj, uint8_t status,
+                                                   uint16_t groupId, uint8_t sceneId, uint16_t transitionTime,
+                                                   chip::CharSpan sceneName,
+                                                   /* TYPE WARNING: array array defaults to */ uint8_t * extensionFieldSets)
+{
+    ChipLogProgress(Zcl, "ViewSceneResponse:");
+    ChipLogProgress(Zcl, "  status: %" PRIu8 "", status);
+    ChipLogProgress(Zcl, "  groupId: %" PRIu16 "", groupId);
+    ChipLogProgress(Zcl, "  sceneId: %" PRIu8 "", sceneId);
+    ChipLogProgress(Zcl, "  transitionTime: %" PRIu16 "", transitionTime);
+    ChipLogProgress(Zcl, "  sceneName: %.*s", static_cast<int>(sceneName.size()), sceneName.data());
+    ChipLogProgress(Zcl, "  extensionFieldSets: %p", extensionFieldSets);
+
+    GET_CLUSTER_RESPONSE_CALLBACKS("ScenesClusterViewSceneResponseCallback");
+
+    Callback::Callback<ScenesClusterViewSceneResponseCallback> * cb =
+        Callback::Callback<ScenesClusterViewSceneResponseCallback>::FromCancelable(onSuccessCallback);
+    cb->mCall(cb->mContext, status, groupId, sceneId, transitionTime, sceneName, extensionFieldSets);
     return true;
 }

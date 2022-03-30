@@ -156,6 +156,9 @@ void DeviceCallbacks::PostAttributeChangeCallback(EndpointId endpointId, Cluster
         OnColorControlAttributeChangeCallback(endpointId, attributeId, value);
         break;
 #endif
+    case ZCL_WINDOW_COVERING_CLUSTER_ID:
+        OnWindowCoveringPostAttributeChangeCallback(endpointId, attributeId, value);
+        break;
     default:
         ESP_LOGI(TAG, "Unhandled cluster ID: %d", clusterId);
         break;
@@ -253,6 +256,22 @@ exit:
     return;
 }
 #endif
+
+void DeviceCallbacks::OnWindowCoveringPostAttributeChangeCallback(EndpointId endpointId, AttributeId attributeId, uint8_t * value)
+{
+    VerifyOrExit(attributeId == ZCL_WC_TARGET_POSITION_LIFT_PERCENT100_THS_ATTRIBUTE_ID ||
+                    attributeId == ZCL_WC_TARGET_POSITION_TILT_PERCENT100_THS_ATTRIBUTE_ID,
+                ESP_LOGI(TAG, "Unhandled Attribute ID: '0x%04x", attributeId));
+    VerifyOrExit(endpointId == 1 || endpointId == 2, ESP_LOGE(TAG, "Unexpected EndPoint ID: `0x%02x'", endpointId));
+
+    ESP_LOGI(TAG, "Value '0x%04x", *value);
+    // At this point we can assume that value points to a bool value.
+    mEndpointOnOffState[endpointId - 1] = *value;
+    endpointId == 1 ? statusLED1.Set(*value) : statusLED2.Set(*value);
+
+exit:
+    return;
+}
 
 bool emberAfBasicClusterMfgSpecificPingCallback(chip::app::CommandHandler * commandObj)
 {

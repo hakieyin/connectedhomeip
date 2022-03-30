@@ -30,6 +30,26 @@
 namespace chip {
 namespace Controller {
 
+class DLL_EXPORT BindingCluster : public ClusterBase
+{
+public:
+    BindingCluster() : ClusterBase(app::Clusters::Binding::Id) {}
+    ~BindingCluster() {}
+
+    // Cluster Commands
+    CHIP_ERROR Bind(Callback::Cancelable * onSuccessCallback, Callback::Cancelable * onFailureCallback, chip::NodeId nodeId,
+                    chip::GroupId groupId, chip::EndpointId endpointId, chip::ClusterId clusterId);
+    CHIP_ERROR Unbind(Callback::Cancelable * onSuccessCallback, Callback::Cancelable * onFailureCallback, chip::NodeId nodeId,
+                      chip::GroupId groupId, chip::EndpointId endpointId, chip::ClusterId clusterId);
+};
+
+class DLL_EXPORT GroupsCluster : public ClusterBase
+{
+public:
+    GroupsCluster() : ClusterBase(app::Clusters::Groups::Id) {}
+    ~GroupsCluster() {}
+};
+
 class DLL_EXPORT OtaSoftwareUpdateProviderCluster : public ClusterBase
 {
 public:
@@ -45,6 +65,30 @@ public:
                           chip::VendorId vendorId, uint16_t productId, uint32_t softwareVersion, uint8_t protocolsSupported,
                           uint16_t hardwareVersion, chip::CharSpan location, bool requestorCanConsent,
                           chip::ByteSpan metadataForProvider);
+};
+
+class DLL_EXPORT ScenesCluster : public ClusterBase
+{
+public:
+    ScenesCluster() : ClusterBase(app::Clusters::Scenes::Id) {}
+    ~ScenesCluster() {}
+
+    // Cluster Commands
+    CHIP_ERROR AddScene(Callback::Cancelable * onSuccessCallback, Callback::Cancelable * onFailureCallback, uint16_t groupId,
+                        uint8_t sceneId, uint16_t transitionTime, chip::CharSpan sceneName, chip::ClusterId clusterId,
+                        uint8_t length, uint8_t value);
+    CHIP_ERROR GetSceneMembership(Callback::Cancelable * onSuccessCallback, Callback::Cancelable * onFailureCallback,
+                                  uint16_t groupId);
+    CHIP_ERROR RecallScene(Callback::Cancelable * onSuccessCallback, Callback::Cancelable * onFailureCallback, uint16_t groupId,
+                           uint8_t sceneId, uint16_t transitionTime);
+    CHIP_ERROR RemoveAllScenes(Callback::Cancelable * onSuccessCallback, Callback::Cancelable * onFailureCallback,
+                               uint16_t groupId);
+    CHIP_ERROR RemoveScene(Callback::Cancelable * onSuccessCallback, Callback::Cancelable * onFailureCallback, uint16_t groupId,
+                           uint8_t sceneId);
+    CHIP_ERROR StoreScene(Callback::Cancelable * onSuccessCallback, Callback::Cancelable * onFailureCallback, uint16_t groupId,
+                          uint8_t sceneId);
+    CHIP_ERROR ViewScene(Callback::Cancelable * onSuccessCallback, Callback::Cancelable * onFailureCallback, uint16_t groupId,
+                         uint8_t sceneId);
 };
 
 } // namespace Controller
