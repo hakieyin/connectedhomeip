@@ -90,6 +90,10 @@ void DeviceCallbacks::PostAttributeChangeCallback(EndpointId endpointId, Cluster
         OnIdentifyPostAttributeChangeCallback(endpointId, attributeId, value);
         break;
 
+    case ZCL_WINDOW_COVERING_CLUSTER_ID:
+        OnWindowCoveringPostAttributeChangeCallback(endpointId, attributeId, value);
+        break;
+
     default:
         break;
     }
@@ -157,6 +161,22 @@ void DeviceCallbacks::OnIdentifyPostAttributeChangeCallback(EndpointId endpointI
     // value is expressed in seconds and the timer is fired every 250ms, so just multiply value by 4.
     // Also, we want timerCount to be odd number, so the ligth state ends in the same state it starts.
     identifyTimerCount = (*value) * 4;
+exit:
+    return;
+}
+
+void DeviceCallbacks::OnWindowCoveringPostAttributeChangeCallback(EndpointId endpointId, AttributeId attributeId, uint8_t * value)
+{
+    VerifyOrExit(attributeId == ZCL_WC_TARGET_POSITION_LIFT_PERCENT100_THS_ATTRIBUTE_ID ||
+                    attributeId == ZCL_WC_TARGET_POSITION_TILT_PERCENT100_THS_ATTRIBUTE_ID,
+                 ChipLogError(DeviceLayer, TAG, "Unhandled Attribute ID: '0x%04x", attributeId));
+    VerifyOrExit(endpointId == 1 || endpointId == 2,
+                 ChipLogError(DeviceLayer, TAG, "Unexpected EndPoint ID: `0x%02x'", endpointId));
+
+    ChipLogError(DeviceLayer, TAG, "Value: `0x%02x'", *value);
+    // At this point we can assume that value points to a bool value.
+    statusLED1.Set(*value);
+
 exit:
     return;
 }
