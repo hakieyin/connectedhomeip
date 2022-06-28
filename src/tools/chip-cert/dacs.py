@@ -82,16 +82,16 @@ class CertType(Enum):
 
 
 class Names:
-    def __init__(self, cert_type: CertType, test_dir, dev_dir, pid):
-        prefixes = {CertType.PAA: test_dir + '/Chip-Test-PAA-FFF1-',
+    def __init__(self, cert_type: CertType, dev_dir, paa_prefix, vid, pid):
+        prefixes = {CertType.PAA: dev_dir + '/{}'.format(paa_prefix),
                     CertType.PAI: dev_dir + '/Matter-Development-PAI-noPID-',
                     CertType.DAC: dev_dir + '/Matter-Development-DAC-{:X}-'.format(pid)}
         array_names_prefix = {CertType.PAA: 'kTestPAA_',
                               CertType.PAI: 'kDevelopmentPAI_',
                               CertType.DAC: 'kDevelopmentDAC_'}
         array_names_suffix = {CertType.PAA: '',
-                              CertType.PAI: '_FFF1',
-                              CertType.DAC: '_FFF1_{:X}'.format(pid)}
+                              CertType.PAI: '_{:X}'.format(vid),
+                              CertType.DAC: '_{:X}_{:X}'.format(vid, pid)}
         generic_prefix = {CertType.PAA: 'kPaa',
                           CertType.PAI: 'kPai',
                           CertType.DAC: 'kDac'}
@@ -111,7 +111,8 @@ class Names:
 
 
 class DevCertBuilder:
-    def __init__(self, cert_type: CertType, dev_dir: str, test_dir: str, chip_cert_dir: str, pid: int):
+    def __init__(self, cert_type: CertType, dev_dir: str, chip_cert_dir: str, paa_prefix: str, vid: int, pid: int):
+        self.vid = vid
         self.pid = pid
         self.cert_type = cert_type
         self.chipcert = chip_cert_dir + 'chip-cert'
@@ -119,9 +120,9 @@ class DevCertBuilder:
         if not os.path.exists(self.chipcert):
             raise Exception('Path not found: %s' % self.chipcert)
 
-        paa = Names(CertType.PAA, test_dir, dev_dir, pid)
-        pai = Names(CertType.PAI, test_dir, dev_dir, pid)
-        dac = Names(CertType.DAC, test_dir, dev_dir, pid)
+        paa = Names(CertType.PAA, dev_dir, paa_prefix, vid, pid)
+        pai = Names(CertType.PAI, dev_dir, paa_prefix, vid, pid)
+        dac = Names(CertType.DAC, dev_dir, paa_prefix, vid, pid)
         if cert_type == CertType.PAI:
             self.signer = paa
             self.own = pai
@@ -132,12 +133,12 @@ class DevCertBuilder:
     def make_certs_and_keys(self) -> None:
         """Creates the PEM and DER certs and keyfiles"""
         if self.cert_type == CertType.PAI:
-            subject_name = 'Matter Dev PAI 0xFFF1 no PID'
+            subject_name = 'Matter Dev PAI 0x{:X} no PID'.format(self.vid)
             pid_flag = ''
             type_flag = '-t i'
             vidpid_fallback_encoding_flag = ''
         elif self.cert_type == CertType.DAC:
-            subject_name = 'Matter Dev DAC 0xFFF1/0x{:X}'.format(self.pid)
+            subject_name = 'Matter Dev DAC 0x{:X}/0x{:X}'.format(self.vid, self.pid)
             pid_flag = '-P 0x{:X}'.format(self.pid)
             type_flag = '-t d'
             # For a subset of DACs with PIDs in a range [0x8010, 0x8014]
@@ -150,19 +151,31 @@ class DevCertBuilder:
             return
 
         cmd = self.chipcert + ' gen-att-cert ' + type_flag + ' -c "' + subject_name + '" -C ' + self.signer.cert_pem + ' -K ' + \
-            self.signer.key_pem + ' -V 0xFFF1 ' + pid_flag + vidpid_fallback_encoding_flag + \
+            self.signer.key_pem + ' -V 0x{:X} '.format(self.vid) + pid_flag + vidpid_fallback_encoding_flag + \
             ' -l 4294967295 -o ' + self.own.cert_pem + ' -O ' + self.own.key_pem
+
+        print('cmd {}'.format(cmd))
+
         subprocess.run(cmd, shell=True)
         cmd = 'openssl x509 -inform pem -in ' + self.own.cert_pem + \
             ' -out ' + self.own.cert_der + ' -outform DER'
+
+        print('cmd {}'.format(cmd))
+
         subprocess.run(cmd, shell=True)
         cmd = 'openssl ec -inform pem -in ' + self.own.key_pem + \
             ' -out ' + self.own.key_der + ' -outform DER'
+
+        print('cmd {}'.format(cmd))
+
         subprocess.run(cmd, shell=True)
 
     def get_raw_keys(self) -> tuple[str, str]:
         """Extracts the raw key bytes from the PEM file"""
         cmd = 'openssl ec -inform pem -in ' + self.own.key_pem + ' -text'
+
+        print('cmd {}'.format(cmd))
+
         out = subprocess.run(
             cmd, shell=True, capture_output=True).stdout.decode('utf-8')
         priv = ''.join(out[out.find('priv:')+5:out.find('pub:')].split())
@@ -221,8 +234,8 @@ def main():
     argparser.add_argument('-d', '--dev_dir', dest='certdir',
                            default='credentials/development/attestation',
                            help='output directory for PEM and DER files')
-    argparser.add_argument('-t', '--test_dir', dest='testdir',
-                           default='credentials/test/attestation/', help='directory holding test PAA')
+    argparser.add_argument('--paa', dest='paa_prefix',
+                           default='Chip-Development-PAA-', help='Prefix of PAA file')
     argparser.add_argument('-o', '--out_dir', dest='outdir',
                            default='src/credentials/examples/', help='Output directory for array files')
     argparser.add_argument('-c', '--chip-cert_dir', dest='chipcertdir',
@@ -231,10 +244,14 @@ def main():
                            help='output file name for PAI C arrays (no .h or .cpp extension)')
     argparser.add_argument('--dacout', dest='dacout', default='ExampleDACs',
                            help='output file name for PAI C arrays (no .h or .cpp extension)')
+    argparser.add_argument('--vid', dest='vid', default='FFF1',
+                           help='VID')
+    argparser.add_argument('--pid', dest='pid', default='8001',
+                        help='PID')
 
     args = argparser.parse_args()
     builder = DevCertBuilder(CertType.PAI, args.certdir,
-                             args.testdir, args.chipcertdir, 0x8000)
+                             args.chipcertdir, args.paa_prefix, int(args.vid, 16), int(args.pid, 16))
 
     builder.make_certs_and_keys()
     [h_full, c_full] = builder.full_arrays()
@@ -255,7 +272,7 @@ def main():
     with open(args.outdir + args.dacout + '.h', "w") as hfile:
         with open(args.outdir + args.dacout + '.cpp', "w") as cfile:
             builder = DevCertBuilder(
-                CertType.DAC, args.certdir, args.testdir, args.chipcertdir, 0x8000)
+                CertType.DAC, args.certdir, args.chipcertdir, args.paa_prefix, int(args.vid, 16), int(args.pid, 16))
             [h_top, c_top] = builder.headers(args.dacout)
             [h_generic, c_generic] = builder.generic_arrays()
             footer = builder.footer()
@@ -264,9 +281,9 @@ def main():
             hfile.write(h_generic)
             cfile.write(c_top)
 
-            for i in range(0x8000, 0x8020):
+            for i in range(int(args.pid, 16), int(args.pid, 16)+1):
                 builder = DevCertBuilder(
-                    CertType.DAC, args.certdir, args.testdir, args.chipcertdir, i)
+                    CertType.DAC, args.certdir, args.chipcertdir, args.paa_prefix, int(args.vid, 16), i)
                 builder.make_certs_and_keys()
                 [h, c] = builder.full_arrays()
                 [h_generic, c_generic] = builder.generic_arrays()

@@ -47,7 +47,7 @@ cert_lifetime=4294967295
 paa_key_file="$dest_dir/Chip-Development-PAA-Key"
 paa_cert_file="$dest_dir/Chip-Development-PAA-Cert"
 
-"$chip_cert_tool" gen-att-cert --type a --subject-cn "Matter Development PAA" --valid-from "$cert_valid_from" --lifetime "$cert_lifetime" --out-key "$paa_key_file".pem --out "$paa_cert_file".pem
+"$chip_cert_tool" gen-att-cert --type a --subject-cn "Matter Development PAA" --valid-from "$cert_valid_from" --lifetime "$cert_lifetime" --out-key "$paa_key_file".pem --out "$paa_cert_file".pem -e ext-basic-pathlen1
 
 "$chip_cert_tool" convert-key "$paa_key_file".pem "$paa_key_file".der --x509-der
 "$chip_cert_tool" convert-cert "$paa_cert_file".pem "$paa_cert_file".der --x509-der
