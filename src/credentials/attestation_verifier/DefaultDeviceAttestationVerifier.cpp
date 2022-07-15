@@ -31,6 +31,7 @@
 namespace chip {
 namespace TestCerts {
 extern const ByteSpan sTestCert_PAA_FFF1_Cert;
+extern const ByteSpan sTestCert_PAA_FFF2_Cert;
 extern const ByteSpan sTestCert_PAA_NoVID_Cert;
 } // namespace TestCerts
 } // namespace chip
@@ -44,6 +45,7 @@ namespace {
 
 static const ByteSpan kTestPaaRoots[] = {
     TestCerts::sTestCert_PAA_FFF1_Cert,
+    TestCerts::sTestCert_PAA_FFF2_Cert,
     TestCerts::sTestCert_PAA_NoVID_Cert,
 };
 
@@ -333,6 +335,7 @@ AttestationVerificationResult DefaultDACVerifier::ValidateCertificateDeclaration
 
     // The vendor_id field in the Certification Declaration SHALL match the VendorID attribute found in the Basic Information
     // cluster
+    ChipLogError(NotSpecified, "[1] 0x%X ?= 0x%X at %s:%d", cdContent.vendorId, deviceInfo.vendorId, __FILE__, __LINE__);
     VerifyOrReturnError(cdContent.vendorId == deviceInfo.vendorId,
                         AttestationVerificationResult::kCertificationDeclarationInvalidVendorId);
 
@@ -345,10 +348,12 @@ AttestationVerificationResult DefaultDACVerifier::ValidateCertificateDeclaration
     {
         // The Vendor ID (VID) subject DN in the DAC SHALL match the dac_origin_vendor_id field in the Certification
         // Declaration.
+        ChipLogError(NotSpecified, "[2] 0x%X ?= 0x%X at %s:%d", deviceInfo.dacVendorId, cdContent.dacOriginVendorId, __FILE__, __LINE__);
         VerifyOrReturnError(deviceInfo.dacVendorId == cdContent.dacOriginVendorId,
                             AttestationVerificationResult::kCertificationDeclarationInvalidVendorId);
         // The Vendor ID (VID) subject DN in the PAI SHALL match the dac_origin_vendor_id field in the Certification
         // Declaration.
+        ChipLogError(NotSpecified, "[3] 0x%X ?= 0x%X at %s:%d", deviceInfo.paiVendorId, cdContent.dacOriginVendorId, __FILE__, __LINE__);
         VerifyOrReturnError(deviceInfo.paiVendorId == cdContent.dacOriginVendorId,
                             AttestationVerificationResult::kCertificationDeclarationInvalidVendorId);
         // The Product ID (PID) subject DN in the DAC SHALL match the dac_origin_product_id field in the Certification
@@ -366,9 +371,11 @@ AttestationVerificationResult DefaultDACVerifier::ValidateCertificateDeclaration
     else
     {
         //  The Vendor ID (VID) subject DN in the DAC SHALL match the vendor_id field in the Certification Declaration
+        ChipLogError(NotSpecified, "[4] 0x%X ?= 0x%X at %s:%d", deviceInfo.dacVendorId, cdContent.vendorId, __FILE__, __LINE__);
         VerifyOrReturnError(deviceInfo.dacVendorId == cdContent.vendorId,
                             AttestationVerificationResult::kCertificationDeclarationInvalidVendorId);
         // The Vendor ID (VID) subject DN in the PAI SHALL match the vendor_id field in the Certification Declaration.
+        ChipLogError(NotSpecified, "[5] 0x%X ?= 0x%X at %s:%d", deviceInfo.paiVendorId, cdContent.vendorId, __FILE__, __LINE__);
         VerifyOrReturnError(deviceInfo.paiVendorId == cdContent.vendorId,
                             AttestationVerificationResult::kCertificationDeclarationInvalidVendorId);
         // The Product ID (PID) subject DN in the DAC SHALL be present in the product_id_array field in the Certification

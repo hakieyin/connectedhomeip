@@ -186,6 +186,11 @@ extern const ByteSpan sTestCert_PAA_FFF1_SKID;
 extern const ByteSpan sTestCert_PAA_FFF1_PublicKey;
 extern const ByteSpan sTestCert_PAA_FFF1_PrivateKey;
 
+extern const ByteSpan sTestCert_PAA_FFF2_Cert;
+extern const ByteSpan sTestCert_PAA_FFF2_SKID;
+extern const ByteSpan sTestCert_PAA_FFF2_PublicKey;
+extern const ByteSpan sTestCert_PAA_FFF2_PrivateKey;
+
 extern const ByteSpan sTestCert_PAA_NoVID_Cert;
 extern const ByteSpan sTestCert_PAA_NoVID_SKID;
 extern const ByteSpan sTestCert_PAA_NoVID_PublicKey;
